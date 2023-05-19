@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <header>
+      <h1>indexedDB !!</h1>
+    </header>
+
+    <section class="add_names">
+      <input type="text" id="elementName" class="add_input" />
+      <button class="add_data">save</button>
+      <button class="get_data">getOne</button>
+      <button class="getAll_data">getAll</button>
+      <button class="put_data">put</button>
+      <button class="delete_data">delete</button>
+      <button class="up_version">up version</button>
+    </section>
+
+    <script>
+      let version = 2;
+      const upVersion = document.querySelector(".up_version");
+      upVersion.addEventListener("click", () => {
+        version++;
+      });
+      const dbReq = indexedDB.open("firstDB", version);
+      let db;
+      // db가 생성되었을때
+      dbReq.addEventListener("success", (e) => {
+        db = e.target.result;
+        let oldVersion = e.oldVersion;
+        console.log(oldVersion);
+        console.log("create success !!", e);
+        // 실행할때마다 실행된다.
+      });
+
+      // 버전이 올라갈때만 실행이 된다.
+      dbReq.addEventListener("upgradeneeded", (e) => {
+        db = e.target.result;
+        console.log("upgradeneeded !!", e);
+        // topics라는 ObjStore가 생성
+        // keyPath = id라는 property를 식별자로 사용하겠다.
+        // autoIncrement ObjStore에 객체가 추가 될때마다 id값이 자동으로 1씩 증가된다.
+        db.createObjectStore("topics", { keyPath: "id", autoIncrement: true });
+      });
+
+      const inputValue = document.querySelector(".add_input");
+      const addBtn = document.querySelector(".add_data");
+
+      addBtn.addEventListener("click", () => {
+        let store = db.transaction("topics", "readwrite").objectStore("topics");
+        let addReq = store.add({
+          txt: inputValue.value,
+        });
+        // 쓰기작업이 끝난 후
+        addReq.addEventListener("success", (e) => {
+          inputValue.value = "";
+          // e.target.result id 값이다
+          console.log("작성 완료", e.target.result);
+        });
+      });
+
+      // 하나의 데이터만 가져오기
+      const getBtn = document.querySelector(".get_data");
+      getBtn.addEventListener("click", () => {
+        let id = 1;
+        let store = db.transaction("topics", "readonly").objectStore("topics");
+        let getReq = store.get(id);
+        // 쓰기작업이 끝난 후
+        getReq.addEventListener("success", (e) => {
+          console.log("하나의 데이터", e.target.result);
+        });
+      });
+
+      // 전체 리스트 데이터 가져오기
+      // IDBCursor 데이터가 많을 시 분할해서 가져온다.
+      const getAllBtn = document.querySelector(".getAll_data");
+      getAllBtn.addEventListener("click", () => {
+        let store = db.transaction("topics", "readonly").objectStore("topics");
+        let getAllReq = store.getAll();
+        // 쓰기작업이 끝난 후
+        getAllReq.addEventListener("success", (e) => {
+          console.log("전체 데이터", e.target.result);
+        });
+      });
+
+      // 데이터 수정
+      const putBtn = document.querySelector(".put_data");
+      putBtn.addEventListener("click", () => {
+        let id = 1;
+        let store = db.transaction("topics", "readwrite").objectStore("topics");
+        // id값이 이미 있으면 알아서 수정된다.
+        let putReq = store.put({
+          id: 2,
+          txt: "ho",
+        });
+        // 쓰기작업이 끝난 후
+        putReq.addEventListener("success", (e) => {
+          console.log("데이터 수정", e.target.result);
+        });
+      });
+
+      // 데이터 삭제
+      const deleteBtn = document.querySelector(".delete_data");
+      deleteBtn.addEventListener("click", () => {
+        let id = 3;
+        let store = db.transaction("topics", "readwrite").objectStore("topics");
+        let delReq = store.delete(id);
+        // 쓰기작업이 끝난 후
+        delReq.addEventListener("success", (e) => {
+          console.log("하나의 데이터", e.target.result);
+        });
+      });
+    </script>
+  </body>
+</html>
