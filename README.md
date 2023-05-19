@@ -1,1 +1,1 @@
-# indexdb_study
+# indexDB study
